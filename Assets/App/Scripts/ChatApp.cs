@@ -30,11 +30,30 @@ public class serializeJson
 }
 
 public class ChatApp : MonoBehaviour {
+	
+	[Header("Publish key")]
+	[Tooltip("Enter publish key")]
+	public String publishKey   = "demo";
+	[Header("Enter subscribe key")]
+	public String subscribeKey = "demo";
 
-	public Transform chatcontent_origin; //Origin point of populating the chat box with chat bubble
+	[Header("Channel Name")]
+	[Tooltip("enter channel name")]
+	public String channelName= "my_world";
+
+	[Space(15)]
+
+	[Header("Other")]
+	[Tooltip("chat bubble starts from this gameobjects transform")]
+	public Transform chatBubble_origin;  //Origin point of populating the chat box with chat bubble
+	[Tooltip("prefab layout of chat bubble")]
 	public GameObject chatBubble_prefab; //Premade layout of chatbubble
-	public Button btnStatus;			 //access to "Connect_Status"
+	[Tooltip("status panel 'Connect_Status' reference")]
+	public Button statusPanel;			 //access to "Connect_Status"
+	[Tooltip("reference to chat input field")]
 	public InputField inputField; 		 //Input field of chatbox
+	[Tooltip("reference to scrollbar")]
+	public ScrollRect scrollRect;		//reference to scrollbar
 
 	private String sendMessage;         //json string object variable
 	private String tempInputfield;		//store the text content of input field temporarly
@@ -43,11 +62,10 @@ public class ChatApp : MonoBehaviour {
 
 	void Start () 
 	{
-		pubnub = new Pubnub("demo", "demo");
+		pubnub = new Pubnub(publishKey, subscribeKey);
 		Subscribe ();  //subscribe to channel "my_world"
 	}
-
-
+		
 /***************************/
 //User Defined Functions
 /***************************/
@@ -55,7 +73,7 @@ public class ChatApp : MonoBehaviour {
     //Initialize Pubnub with keys
     public void init()
 	{
-		pubnub = new Pubnub ("demo", "demo");
+		pubnub = new Pubnub (publishKey, subscribeKey);
 	}
 
 	//close application
@@ -70,7 +88,7 @@ public class ChatApp : MonoBehaviour {
 	{
 		//subscribing to channel "my_world"
 		pubnub.Subscribe<string>(
-			"my_world", 
+			channelName, 
 			DisplaySubscribeReturnMessage,
 			DisplaySubscribeConnectStatusMessage,
 			DisplayErrorMessage
@@ -89,7 +107,7 @@ public class ChatApp : MonoBehaviour {
 			sendMessage = JsonUtility.ToJson(myObject);
 
 			pubnub.Publish<string> (
-				"my_world",
+				channelName,
 				sendMessage,
 				DisplayReturnMessage,
 				DisplayErrorMessage
@@ -103,14 +121,14 @@ public class ChatApp : MonoBehaviour {
 	{
 		//statusMessage => contains string/text
 		//IsSucess      => to check if status message is sucess or error related
-		btnStatus.GetComponentInChildren<Text> ().text = statusMessage;
+		statusPanel.GetComponentInChildren<Text> ().text = statusMessage;
 		if (isSucess)  
 		{
-			btnStatus.GetComponent<Image> ().color = Color.green; //statusbtn color is changed to green in Sucess
+			statusPanel.GetComponent<Image> ().color = Color.green; //statusbtn color is changed to green in Sucess
 		} 
 		else
 		{
-			btnStatus.GetComponent<Image> ().color = Color.red;  //statusbtn color is changed to green in Failure
+			statusPanel.GetComponent<Image> ().color = Color.red;  //statusbtn color is changed to green in Failure
 		}
 	}
 
@@ -126,11 +144,11 @@ public class ChatApp : MonoBehaviour {
 	{
 		//chatContent => contains chat messages from user/server
 		//isServer    => check if the respective chatContent is from server or not
-		if (chatContent != "" && chatContent != inputField.text)  //check if passed string variable is null/empty
+		if (chatContent != "" && chatContent != inputField.text) 					  //check if passed string variable is null/empty
 		{
 			//instantiate or make copy of prefab and assign respective content to it
 			GameObject newChatBubble = Instantiate (chatBubble_prefab) as GameObject; //creating a copy
-			newChatBubble.transform.SetParent (chatcontent_origin, false);			  //Assign parent of the newly created element and keep its local orientation
+			newChatBubble.transform.SetParent (chatBubble_origin, false);			  //Assign parent of the newly created element and keep its local orientation
 			newChatBubble.GetComponentInChildren<Text> ().text = chatContent;		  //Assign the text the new element should contain
 
 			if (isServer)															  //Check if chat message received is from server
@@ -138,6 +156,16 @@ public class ChatApp : MonoBehaviour {
 				newChatBubble.GetComponent<Image> ().color = Color.yellow;			  //Assign a colour to chat bubble
 			}	
 		}
+
+		scrollBar_autoadjust ();													  //Autoadjust the scrollbar to show lastest message
+	}
+
+	//auto adjust scrollbar to show the latest message
+	public void scrollBar_autoadjust()
+	{
+		Canvas.ForceUpdateCanvases();
+		scrollRect.verticalNormalizedPosition =0f;
+		Canvas.ForceUpdateCanvases();
 	}
 
 
@@ -170,7 +198,7 @@ void DisplaySubscribeReturnMessage(string result) {
 					{
 						DisplayChat (serverMessage, false); //pass it to function to display it in chatbox
 					}
-					DisplayStatus ("Connected ! channel : my_world", true);
+					DisplayStatus ("Connected ! channel : "+channelName, true);
 				}
 			}
 		}
@@ -183,7 +211,7 @@ void DisplaySubscribeReturnMessage(string result) {
 
 	void DisplayErrorMessage(PubnubClientError pubnubError)
     {
-		DisplayStatus ("Connection Failed ! Error Code :" + pubnubError.StatusCode, false);
+		DisplayStatus ("Connection Failed ! Error Code : " + pubnubError.StatusCode, false);
 	}
 
 	void DisplayReturnMessage(string result)
