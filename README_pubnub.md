@@ -649,13 +649,4 @@ domainName = "pubsub.pubnub.com"
 This variable default value is set to "pubsub.pubnub.com". This variable is used only for mono runtime. This variable value will be same as "_origin"
 
 # Please direct all Support Questions and Concerns to Support@PubNub.com
-=======
-# Realtime-chat-app
-An experimental android app for real time chat between users. Made using Unity and PubNub SDK.
-Feel free to use the code or project for your own use !
 
-
-###### latest build downloadable at "_Playable_Build" folder
-
->This project is constantly being updated , so expect many changes in future commits
->>>>>>> 72c105417af931c8f5bb9c43b4408c15af6c4045
